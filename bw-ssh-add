@@ -52,22 +52,20 @@ if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
 fi
 
 calculate_seconds_until_eod() {
+	local eod_time
 	local current_epoch
 	local today
-	local eod_time
 	local today_at_eod_epoch
 	local seconds_until_eod
 
-	if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
-		# BW_SSH_ADD_EOD is set and non-empty
-		eod_time="$BW_SSH_ADD_EOD"
-	elif [[ -z ${BW_SSH_ADD_EOD+x} ]]; then
-		# BW_SSH_ADD_EOD is unset
-		eod_time="17:00:00"
-	else
-		# BW_SSH_ADD_EOD is set to an empty string
+	# If BW_SSH_ADD_EOD is set to an empty string, return -1 to indicate no expiration
+	if [[ -n ${BW_SSH_ADD_EOD+x} ]] && [[ -z $BW_SSH_ADD_EOD ]]; then
+		echo -1
 		return
 	fi
+
+	# Use BW_SSH_ADD_EOD if set, otherwise default to 17:00:00 (5:00 PM)
+	eod_time=${BW_SSH_ADD_EOD:-"17:00:00"}
 
 	current_epoch=$(date +%s)
 	today=$(date +%Y-%m-%d)
@@ -158,11 +156,12 @@ bw_id=$1
 shift
 
 # Determine whether to add a lifetime to the ssh-add command
-if [[ -z ${BW_SSH_ADD_EOD+x} ]] || [[ -n $BW_SSH_ADD_EOD ]]; then
-	lifetime=$(calculate_seconds_until_eod)
-	ssh_add_args=("-t" "$lifetime" "$@")
-else
+lifetime=$(calculate_seconds_until_eod)
+
+if [[ $lifetime -eq -1 ]]; then
 	ssh_add_args=("$@")
+else
+	ssh_add_args=("-t" "$lifetime" "$@")
 fi
 
 ensure_bitwarden_unlocked
