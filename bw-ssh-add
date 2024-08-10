@@ -60,7 +60,7 @@ calculate_seconds_until_eod() {
 
 	# If BW_SSH_ADD_EOD is set to an empty string, return -1 to indicate no expiration
 	if [[ -n ${BW_SSH_ADD_EOD+x} ]] && [[ -z $BW_SSH_ADD_EOD ]]; then
-		echo -1
+		printf "%d" -1
 		return
 	fi
 
