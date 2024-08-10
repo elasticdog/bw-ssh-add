@@ -92,7 +92,7 @@ add_ssh_key() {
 		cat <<'EOF'
 #!/usr/bin/expect -f
 log_user 0
-set timeout -1
+set timeout 60
 
 # Get ssh-add arguments from first line of stdin
 set args [gets stdin]
