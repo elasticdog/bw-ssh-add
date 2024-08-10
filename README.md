@@ -4,12 +4,15 @@
 
 ---
 
-A script to automate adding SSH keys to the local SSH agent using passphrases
-stored in [Bitwarden][]. It retrieves passphrases securely using the [Bitwarden
-CLI][], then uses `expect` to interact with `ssh-add`.
+A script to automate adding SSH keys to the local [SSH agent][1] using
+passphrases stored in [Bitwarden][2]. It retrieves passphrases securely using
+the [Bitwarden CLI][3], then uses [`expect`][4] to interact with [`ssh-add`][5].
 
-[Bitwarden]: https://bitwarden.com/
-[Bitwarden CLI]: https://github.com/bitwarden/clients/tree/main/apps/cli
+[1]: https://www.ssh.com/academy/ssh/agent
+[2]: https://bitwarden.com/
+[3]: https://github.com/bitwarden/clients/tree/main/apps/cli
+[4]: https://core.tcl-lang.org/expect/home
+[5]: https://www.ssh.com/academy/ssh/add-command
 
 ## Usage
 
@@ -18,7 +21,9 @@ CLI][], then uses `expect` to interact with `ssh-add`.
 - The first argument is passed to `bw` as either a search term or an item's
   globally unique identifier to retrieve the passphrase.
 - All additional arguments are passed through to `ssh-add` unchanged. Refer to
-  the `ssh-add` man page for details on available options.
+  the [`ssh-add` man page][6] for details on available options.
+
+[6]: https://man.openbsd.org/ssh-add.1
 
 The script sets an expiration time for the added key:
 
