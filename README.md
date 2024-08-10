@@ -16,7 +16,9 @@ the [Bitwarden CLI][3], then uses [`expect`][4] to interact with [`ssh-add`][5].
 
 ## Usage
 
-    bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
+```bash
+bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
+```
 
 - The first argument is passed to `bw` as either a search term or an item's
   globally unique identifier to retrieve the passphrase.
@@ -35,11 +37,13 @@ The script sets an expiration time for the added key:
 
 ### Examples
 
-    bw-ssh-add "My SSH Key"
-    bw-ssh-add 99ee88d2-6046-4ea7-92c2-acac464b1412
-    bw-ssh-add "Work Laptop Key" -t 3600
-    BW_SSH_ADD_EOD="18:30:00" bw-ssh-add "Custom EOD Key"
-    BW_SSH_ADD_EOD="" bw-ssh-add "No Expiry Key"
+```bash
+bw-ssh-add "My SSH Key"
+bw-ssh-add 99ee88d2-6046-4ea7-92c2-acac464b1412
+bw-ssh-add "Work Laptop Key" -t 3600
+BW_SSH_ADD_EOD="18:30:00" bw-ssh-add "Custom EOD Key"
+BW_SSH_ADD_EOD="" bw-ssh-add "No Expiry Key"
+```
 
 ## Installation
 
