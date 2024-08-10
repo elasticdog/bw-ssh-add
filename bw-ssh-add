@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+#
+# bw-ssh-add - https://github.com/elasticdog/bw-ssh-add
+#
+# This script automates the process of adding an SSH key to the local SSH agent
+# using a passphrase stored in Bitwarden. It retrieves the passphrase securely
+# using the Bitwarden CLI, then uses `expect` to interact with `ssh-add`.
+#
+# Usage: bw-ssh-add <bitwarden-item-id> [ssh-add arguments...]
+#
+# The first argument is passed to `bw` as either a search term or an item's
+# globally unique identifier to retrieve the passphrase. All additional
+# arguments are passed through to `ssh-add` unchanged. Refer to the `ssh-add`
+# man page for details on available options.
+#
+# The script sets an expiration time for the added key, defaulting to 5:00 PM
+# local time, or 3 hours if it's already past 5:00 PM. This end-of-day time can
+# be customized using the BW_SSH_ADD_EOD environment variable. To remove the
+# maximum lifetime completely, set BW_SSH_ADD_EOD to an empty string.
+#
+# Examples:
+#
+#   bw-ssh-add "My SSH Key"
+#   bw-ssh-add 99ee88d2-6046-4ea7-92c2-acac464b1412
+#   bw-ssh-add "Work Laptop Key" -t 3600
+#   BW_SSH_ADD_EOD="" bw-ssh-add "No Expiry Key"
+#
+# Requirements:
+#
+#   - Bitwarden CLI (`bw`) installed and configured
+#   - `expect` command available
+#   - SSH agent running
+#
+# This source code is released under the Zero Clause BSD License (SPDX: 0BSD).
+# Copyright (c) 2024 Aaron Bull Schaefer and contributors
+#
+
+# Validate BW_SSH_ADD_EOD format if set
+if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
+	if ! [[ $BW_SSH_ADD_EOD =~ ^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$ ]]; then
+		printf "Error: Invalid BW_SSH_ADD_EOD format.\n" >&2
+		printf "Please use HH:MM:SS (e.g., 17:00:00) with hours from 00 to 23,\n" >&2
+		printf "or an empty string to remove the maximum lifetime limit.\n" >&2
+		exit 1
+	fi
+fi
+
+calculate_seconds_until_eod() {
+	local current_epoch
+	local today
+	local eod_time
+	local today_at_eod_epoch
+	local seconds_until_eod
+
+	if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
+		# BW_SSH_ADD_EOD is set and non-empty
+		eod_time="$BW_SSH_ADD_EOD"
+	elif [[ -z ${BW_SSH_ADD_EOD+x} ]]; then
+		# BW_SSH_ADD_EOD is unset
+		eod_time="17:00:00"
+	else
+		# BW_SSH_ADD_EOD is set to an empty string
+		return
+	fi
+
+	current_epoch=$(date +%s)
+	today=$(date +%Y-%m-%d)
+	today_at_eod_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "${today} ${eod_time}" +%s)
+	seconds_until_eod=$((today_at_eod_epoch - current_epoch))
+
+	if ((seconds_until_eod > 0)); then
+		printf "%d" "$seconds_until_eod"
+	else
+		printf "%d" $((3 * 3600)) # Default to 3 hours if after EOD
+	fi
+}
+
+add_ssh_key() {
+	local bw_id=$1
+	shift
+	local bw_password
+	local ssh_add_args="$*"
+
+	bw_password=$(bw get password "$bw_id") || {
+		printf "Error: Failed to retrieve password from Bitwarden\n" >&2
+		exit 1
+	}
+
+	expect -f <(
+		cat <<'EOF'
+#!/usr/bin/expect -f
+log_user 0
+set timeout -1
+
+# Get ssh-add arguments from first line of stdin
+set args [gets stdin]
+# Get password from second line of stdin
+set password [gets stdin]
+
+# Display the command being executed
+puts "Executing: ssh-add $args"
+
+# Attempt to spawn ssh-add with arguments
+spawn ssh-add {*}$args
+
+# Enable logging for ssh-add output
+log_user 1
+
+# Expect the passphrase prompt
+expect {
+    "Enter passphrase" {
+        # Disable logging before sending the password
+        log_user 0
+        send -- "$password\r"
+        # Re-enable logging after sending the password
+        log_user 1
+    }
+    timeout {
+        puts "Error: Timed out waiting for passphrase prompt"
+        exit 1
+    }
+    eof {
+        puts "Error: ssh-add process ended unexpectedly"
+        exit 1
+    }
+}
+
+# Wait for the process to finish
+expect eof
+
+# Check the exit status of the spawned process
+lassign [wait] pid spawnid os_error_flag value
+if {$os_error_flag != 0 || $value != 0} {
+    puts "Error: ssh-add process exited with status $value"
+    exit 1
+}
+EOF
+	) <<EOI
+$ssh_add_args
+$bw_password
+EOI
+}
+
+ensure_bitwarden_unlocked() {
+	if ! bw login --check >/dev/null 2>&1; then
+		printf "You are not logged in to Bitwarden. Please run 'bw login' first.\n" >&2
+		exit 1
+	fi
+
+	if ! bw unlock --check >/dev/null 2>&1; then
+		printf "Bitwarden vault is locked. Attempting to unlock...\n"
+		printf "Please enter your master password when prompted.\n"
+		export BW_SESSION
+		BW_SESSION=$(bw unlock --raw)
+	fi
+}
+
+if ! command -v expect &>/dev/null; then
+	printf "Error: 'expect' command not found. Please install it and try again.\n" >&2
+	exit 1
+fi
+
+if [[ $# -lt 1 ]]; then
+	printf "Usage: %s <bitwarden-item-id> [ssh-add arguments...]\n" "$0" >&2
+	exit 1
+fi
+
+bw_id=$1
+shift
+
+# Determine whether to add a lifetime to the ssh-add command
+if [[ -z ${BW_SSH_ADD_EOD+x} ]] || [[ -n $BW_SSH_ADD_EOD ]]; then
+	lifetime=$(calculate_seconds_until_eod)
+	ssh_add_args=("-t" "$lifetime" "$@")
+else
+	ssh_add_args=("$@")
+fi
+
+ensure_bitwarden_unlocked
+add_ssh_key "$bw_id" "${ssh_add_args[@]}"
