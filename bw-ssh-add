@@ -8,7 +8,7 @@ set -euo pipefail
 # stored in Bitwarden. It retrieves passphrases securely using the Bitwarden
 # CLI, then uses `expect` to interact with `ssh-add`.
 #
-# Usage: bw-ssh-add <bitwarden-item-id> [ssh-add arguments...]
+# Usage: bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
 #
 # - The first argument is passed to `bw` as either a search term or an item's
 #   globally unique identifier to retrieve the passphrase.
@@ -150,7 +150,7 @@ if ! command -v expect &>/dev/null; then
 fi
 
 if [[ $# -lt 1 ]]; then
-	printf "Usage: %s <bitwarden-item-id> [ssh-add arguments...]\n" "$0" >&2
+	printf "Usage: %s <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]\n" "$0" >&2
 	exit 1
 fi
 

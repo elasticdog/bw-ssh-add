@@ -13,7 +13,7 @@ CLI][], then uses `expect` to interact with `ssh-add`.
 
 ## Usage
 
-    bw-ssh-add <bitwarden-item-id> [ssh-add arguments...]
+    bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
 
 - The first argument is passed to `bw` as either a search term or an item's
   globally unique identifier to retrieve the passphrase.
