@@ -90,8 +90,6 @@ add_ssh_key() {
 
 	expect -f <(
 		cat <<'EOF'
-#!/usr/bin/expect -f
-log_user 0
 set timeout 60
 
 # Get ssh-add arguments from first line of stdin
@@ -99,42 +97,27 @@ set args [gets stdin]
 # Get password from second line of stdin
 set password [gets stdin]
 
-# Display the command being executed
-puts "Executing: ssh-add $args"
-
-# Attempt to spawn ssh-add with arguments
 spawn ssh-add {*}$args
 
-# Enable logging for ssh-add output
-log_user 1
-
-# Expect the passphrase prompt
+# Expect the passphrase prompt and handle completion
 expect {
     "Enter passphrase" {
-        # Disable logging before sending the password
         log_user 0
         send -- "$password\r"
-        # Re-enable logging after sending the password
         log_user 1
+        exp_continue
+    }
+    "Identity added" {
+        # Success case
     }
     timeout {
-        puts "Error: Timed out waiting for passphrase prompt"
+        puts "Error: Timed out waiting for ssh-add to complete"
         exit 1
     }
     eof {
         puts "Error: ssh-add process ended unexpectedly"
         exit 1
     }
-}
-
-# Wait for the process to finish
-expect eof
-
-# Check the exit status of the spawned process
-lassign [wait] pid spawnid os_error_flag value
-if {$os_error_flag != 0 || $value != 0} {
-    puts "Error: ssh-add process exited with status $value"
-    exit 1
 }
 EOF
 	) <<EOI
