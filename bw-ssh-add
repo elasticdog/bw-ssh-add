@@ -86,7 +86,7 @@ add_ssh_key() {
 	local ssh_add_args="$*"
 
 	bw_password=$(bw get password "$bw_id") || {
-		printf "Error: Failed to retrieve password from Bitwarden\n" >&2
+		printf "Error: Failed to retrieve password from Bitwarden.\n" >&2
 		exit 1
 	}
 
@@ -113,11 +113,11 @@ expect {
         # Success case
     }
     timeout {
-        puts "Error: Timed out waiting for ssh-add to complete"
+        puts "Error: Timed out waiting for ssh-add to complete."
         exit 1
     }
     eof {
-        puts "Error: ssh-add process ended unexpectedly"
+        puts "Error: ssh-add process ended unexpectedly."
         exit 1
     }
 }
@@ -130,7 +130,7 @@ EOI
 
 ensure_bitwarden_unlocked() {
 	if ! bw login --check >/dev/null 2>&1; then
-		printf "You are not logged in to Bitwarden. Please run 'bw login' first.\n" >&2
+		printf "Error: You are not logged in to Bitwarden. Please run 'bw login' first.\n" >&2
 		exit 1
 	fi
 
