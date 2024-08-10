@@ -4,27 +4,31 @@ set -euo pipefail
 #
 # bw-ssh-add - https://github.com/elasticdog/bw-ssh-add
 #
-# This script automates the process of adding an SSH key to the local SSH agent
-# using a passphrase stored in Bitwarden. It retrieves the passphrase securely
-# using the Bitwarden CLI, then uses `expect` to interact with `ssh-add`.
+# This script automates adding SSH keys to the local SSH agent using passphrases
+# stored in Bitwarden. It retrieves passphrases securely using the Bitwarden
+# CLI, then uses `expect` to interact with `ssh-add`.
 #
 # Usage: bw-ssh-add <bitwarden-item-id> [ssh-add arguments...]
 #
-# The first argument is passed to `bw` as either a search term or an item's
-# globally unique identifier to retrieve the passphrase. All additional
-# arguments are passed through to `ssh-add` unchanged. Refer to the `ssh-add`
-# man page for details on available options.
+# - The first argument is passed to `bw` as either a search term or an item's
+#   globally unique identifier to retrieve the passphrase.
+# - All additional arguments are passed through to `ssh-add` unchanged. Refer to
+#   the `ssh-add` man page for details on available options.
 #
-# The script sets an expiration time for the added key, defaulting to 5:00 PM
-# local time, or 3 hours if it's already past 5:00 PM. This end-of-day time can
-# be customized using the BW_SSH_ADD_EOD environment variable. To remove the
-# maximum lifetime completely, set BW_SSH_ADD_EOD to an empty string.
+# The script sets an expiration time for the added key:
+#
+# - Default: 17:00:00 (5:00 PM local time)
+# - If it's already past 5:00 PM: 3 hours
+# - Customize the end-of-day time using the `BW_SSH_ADD_EOD` environment variable
+#   (format: HH:MM:SS)
+# - To remove the maximum lifetime, set `BW_SSH_ADD_EOD` to an empty string
 #
 # Examples:
 #
 #   bw-ssh-add "My SSH Key"
 #   bw-ssh-add 99ee88d2-6046-4ea7-92c2-acac464b1412
 #   bw-ssh-add "Work Laptop Key" -t 3600
+#   BW_SSH_ADD_EOD="18:30:00" bw-ssh-add "Custom EOD Key"
 #   BW_SSH_ADD_EOD="" bw-ssh-add "No Expiry Key"
 #
 # Requirements:
