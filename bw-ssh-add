@@ -41,15 +41,7 @@ set -euo pipefail
 # Copyright (c) 2024 Aaron Bull Schaefer and contributors
 #
 
-# Validate BW_SSH_ADD_EOD format if set
-if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
-	if ! [[ $BW_SSH_ADD_EOD =~ ^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$ ]]; then
-		printf "Error: Invalid BW_SSH_ADD_EOD format.\n" >&2
-		printf "Please use HH:MM:SS (e.g., 17:00:00) with hours from 00 to 23,\n" >&2
-		printf "or an empty string to remove the maximum lifetime limit.\n" >&2
-		exit 1
-	fi
-fi
+##### FUNCTIONS
 
 calculate_seconds_until_eod() {
 	local eod_time
@@ -76,6 +68,20 @@ calculate_seconds_until_eod() {
 		printf "%d" "$seconds_until_eod"
 	else
 		printf "%d" $((3 * 3600)) # Default to 3 hours if after EOD
+	fi
+}
+
+ensure_bitwarden_unlocked() {
+	if ! bw login --check >/dev/null 2>&1; then
+		printf "Error: You are not logged in to Bitwarden. Please run 'bw login' first.\n" >&2
+		exit 1
+	fi
+
+	if ! bw unlock --check >/dev/null 2>&1; then
+		printf "Bitwarden vault is locked. Attempting to unlock...\n"
+		printf "Please enter your master password when prompted.\n"
+		export BW_SESSION
+		BW_SESSION=$(bw unlock --raw)
 	fi
 }
 
@@ -128,25 +134,25 @@ add_ssh_key() {
 	EOI
 }
 
-ensure_bitwarden_unlocked() {
-	if ! bw login --check >/dev/null 2>&1; then
-		printf "Error: You are not logged in to Bitwarden. Please run 'bw login' first.\n" >&2
-		exit 1
-	fi
+##### MAIN
 
-	if ! bw unlock --check >/dev/null 2>&1; then
-		printf "Bitwarden vault is locked. Attempting to unlock...\n"
-		printf "Please enter your master password when prompted.\n"
-		export BW_SESSION
-		BW_SESSION=$(bw unlock --raw)
-	fi
-}
-
+# Check for dependencies
 if ! command -v expect &>/dev/null; then
 	printf "Error: 'expect' command not found. Please install it and try again.\n" >&2
 	exit 1
 fi
 
+# Validate environment's end-of-day format if set
+if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
+	if ! [[ $BW_SSH_ADD_EOD =~ ^([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$ ]]; then
+		printf "Error: Invalid BW_SSH_ADD_EOD format.\n" >&2
+		printf "Please use HH:MM:SS (e.g., 17:00:00) with hours from 00 to 23,\n" >&2
+		printf "or an empty string to remove the maximum lifetime limit.\n" >&2
+		exit 1
+	fi
+fi
+
+# Ensure required Bitwarden item identifier is provided
 if [[ $# -lt 1 ]]; then
 	printf "Usage: %s <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]\n" "${0##*/}" >&2
 	exit 1
