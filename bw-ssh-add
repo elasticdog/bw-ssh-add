@@ -91,41 +91,41 @@ add_ssh_key() {
 	}
 
 	expect -f <(
-		cat <<'EOF'
-set timeout 60
+		cat <<-'EOF'
+			set timeout 60
 
-# Get ssh-add arguments from first line of stdin
-set args [gets stdin]
-# Get password from second line of stdin
-set password [gets stdin]
+			# Get ssh-add arguments from first line of stdin
+			set args [gets stdin]
+			# Get password from second line of stdin
+			set password [gets stdin]
 
-spawn ssh-add {*}$args
+			spawn ssh-add {*}$args
 
-# Expect the passphrase prompt and handle completion
-expect {
-    "Enter passphrase" {
-        log_user 0
-        send -- "$password\r"
-        log_user 1
-        exp_continue
-    }
-    "Identity added" {
-        # Success case
-    }
-    timeout {
-        puts "Error: Timed out waiting for ssh-add to complete."
-        exit 1
-    }
-    eof {
-        puts "Error: ssh-add process ended unexpectedly."
-        exit 1
-    }
-}
-EOF
-	) <<EOI
-$ssh_add_args
-$bw_password
-EOI
+			# Expect the passphrase prompt and handle completion
+			expect {
+			    "Enter passphrase" {
+			        log_user 0
+			        send -- "$password\r"
+			        log_user 1
+			        exp_continue
+			    }
+			    "Identity added" {
+			        # Success case
+			    }
+			    timeout {
+			        puts "Error: Timed out waiting for ssh-add to complete."
+			        exit 1
+			    }
+			    eof {
+			        puts "Error: ssh-add process ended unexpectedly."
+			        exit 1
+			    }
+			}
+		EOF
+	) <<-EOI
+		$ssh_add_args
+		$bw_password
+	EOI
 }
 
 ensure_bitwarden_unlocked() {
