@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Explicit safety checks for all external dependencies.
+
 ## [0.1.1] - 2024-08-12
 
 ### Changed

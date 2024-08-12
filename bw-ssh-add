@@ -137,10 +137,12 @@ add_ssh_key() {
 ##### MAIN
 
 # Check for dependencies
-if ! command -v expect &>/dev/null; then
-	printf "Error: 'expect' command not found. Please install it and try again.\n" >&2
-	exit 1
-fi
+for cmd in {bw,expect,ssh-add}; do
+	if ! command -v "$cmd" &>/dev/null; then
+		printf "Error: required command '%s' was not found. Please install it and try again.\n" "$cmd" >&2
+		exit 1
+	fi
+done
 
 # Validate environment's end-of-day format if set
 if [[ -n ${BW_SSH_ADD_EOD:-} ]]; then
