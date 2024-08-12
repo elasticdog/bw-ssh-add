@@ -4,9 +4,10 @@
 
 ---
 
-A script to automate adding SSH keys to the local [SSH agent][1] using
-passphrases stored in [Bitwarden][2]. It retrieves passphrases securely using
-the [Bitwarden CLI][3], then uses [`expect`][4] to interact with [`ssh-add`][5].
+A script to add a passphrase-protected SSH key to your local [`ssh-agent`][1] by
+leveraging credentials stored in [Bitwarden][2]. It securely retrieves the
+passphrase via the [Bitwarden CLI][3], then uses [`expect`][4] to automate the
+authentication process with [`ssh-add`][5].
 
 [1]: https://www.ssh.com/academy/ssh/agent
 [2]: https://bitwarden.com/
@@ -20,9 +21,10 @@ the [Bitwarden CLI][3], then uses [`expect`][4] to interact with [`ssh-add`][5].
 bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
 ```
 
-- The first argument is passed to `bw` as either a search term or an item's
-  globally unique identifier to retrieve the passphrase.
-- All additional arguments are passed through to `ssh-add` unchanged. Refer to
+- The first argument serves as input for `bw get password`, either as a search
+  term or as an item's globally unique identifier, to retrieve the key's
+  passphrase.
+- Any additional arguments are passed through to `ssh-add` unchanged. Refer to
   the [`ssh-add` man page][6] for details on available options.
 
 [6]: https://man.openbsd.org/ssh-add.1

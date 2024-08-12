@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to
 ### Added
 
 - Explicit safety checks for all external dependencies.
+- Improved documentation to remove behavioral ambiguity.
 
 ## [0.1.1] - 2024-08-12
 
