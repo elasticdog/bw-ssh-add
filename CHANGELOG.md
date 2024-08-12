@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog][1], and this project adheres to
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-08-12
+
 ### Added
 
 - Explicit safety checks for all external dependencies.
@@ -27,6 +29,7 @@ The format is based on [Keep a Changelog][1], and this project adheres to
 
 - Initial release.
 
-[Unreleased]: https://github.com/elasticdog/bw-ssh-add/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/elasticdog/bw-ssh-add/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/elasticdog/bw-ssh-add/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/elasticdog/bw-ssh-add/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/elasticdog/bw-ssh-add/commits/v0.1.0
