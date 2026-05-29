@@ -31,8 +31,7 @@ bw-ssh-add <BITWARDEN-ITEM-ID> [SSH-ADD-ARGUMENTS...]
 
 The script sets an expiration time for the added key:
 
-- Default: **17:00:00** (5:00 PM local time)
-- If it's already past 5:00 PM: **3 hours**
+- Default: **17:00:00** (5:00 PM local time), with a minimum of **3 hours**
 - Customize the end-of-day time using the `BW_SSH_ADD_EOD` environment variable
   (format: **HH:MM:SS**)
 - To remove the maximum lifetime, set `BW_SSH_ADD_EOD` to an **empty string**

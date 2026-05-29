@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog][1], and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Key lifetime now uses a minimum of 3 hours instead of always expiring at EOD.
+
 ## [0.2.0] - 2024-08-12
 
 ### Added
